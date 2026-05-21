@@ -1,34 +1,32 @@
-import gymnasium
+import gymnasium as gym
 import flappy_bird_gymnasium
-import pygame
+from dql import DQLAgent
 
-env = gymnasium.make(
-    "FlappyBird-v0",
-    render_mode="human"
-)
+NEPS = 600
 
-obs, info = env.reset()
+def main():
+    train_env = gym.make("FlappyBird-v0", use_lidar=False)
+    play_env  = gym.make("FlappyBird-v0", use_lidar=False, render_mode="human")
 
-running = True
+    agent = DQLAgent(train_env)
 
-while running:
+    # Play before training
+    print("=== Untrained agent ===")
+    agent.env = play_env
+    agent.play()
 
-    action = 0
+    # Train
+    print(f"\n=== Training for {NEPS} episodes ===")
+    agent.env = train_env
+    agent.train(neps=NEPS)
 
-    for event in pygame.event.get():
+    # Play after training
+    print("\n=== Trained agent ===")
+    agent.env = play_env
+    agent.play()
 
-        if event.type == pygame.QUIT:
-            running = False
+    train_env.close()
+    play_env.close()
 
-        if event.type == pygame.KEYDOWN:
-
-            if event.key == pygame.K_SPACE:
-                action = 1
-
-    obs, reward, terminated, truncated, info = env.step(action)
-
-    if terminated or truncated:
-        obs, info = env.reset()
-
-env.close()
-pygame.quit()
+if __name__ == "__main__":
+    main()
